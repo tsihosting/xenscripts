@@ -1,0 +1,24 @@
+#!/bin/bash
+
+sleep 30
+
+function xe_param()
+{
+  PARAM=$1
+  while read DATA; do
+    LINE=$(echo $DATA | egrep "$PARAM")
+    if [ $? -eq 0 ]; then
+      echo "$LINE" | awk 'BEGIN{FS=": "}{print $2}'
+    fi
+  done
+}
+
+VMS=$(xe vm-list is-control-domain=false | xe_param uuid)
+
+for VM in $VMS; do
+  AUTOSTART=$(xe vm-param-get uuid=$VM param-name=other-config param-key=XenCenter.CustomFields.autostart)
+  if ($AUTOSTART == 'true') then
+    echo "Starting VM: $VM"
+    xe vm-start uuid=$VM
+  fi;
+done;
